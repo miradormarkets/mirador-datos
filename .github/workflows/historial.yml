@@ -1,0 +1,31 @@
+name: Historial semanal
+
+on:
+  schedule:
+    - cron: "17 12 * * 0"   # domingos 6:17 a. m. en Mérida
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  historial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Bajar historial
+        env:
+          TWELVEDATA_KEY: ${{ secrets.TWELVEDATA_KEY }}
+        run: python scripts/historial.py
+      - name: Guardar cambios
+        run: |
+          git config user.name "Mirador Markets"
+          git config user.email "actions@users.noreply.github.com"
+          git add historial.json
+          git diff --cached --quiet || git commit -m "Historial semanal"
+          git pull --rebase --autostash
+          git push
